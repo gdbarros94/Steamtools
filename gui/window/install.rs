@@ -34,9 +34,36 @@ pub enum InstallStatus {
     Error(String),
 }
 
+/// Detect the real Steam path, considering both ~/.steam and ~/.steam/debian-installation
+fn detect_real_steam_path(user_provided: &str) -> io::Result<String> {
+    let user_path = user_provided.trim();
+    
+    // Try debian-installation variant first (more specific, used by native Steam on Linux)
+    let debian_variant = format!("{user_path}{MAIN_SEPARATOR}debian-installation");
+    if Path::new(&debian_variant).exists() 
+        && Path::new(&format!("{debian_variant}{MAIN_SEPARATOR}steamapps")).exists() {
+        debug!("Detected Steam using debian-installation path: {debian_variant}");
+        return Ok(debian_variant);
+    }
+    
+    // Fallback to user-provided path
+    if Path::new(user_path).exists() 
+        && Path::new(&format!("{user_path}{MAIN_SEPARATOR}steamapps")).exists() {
+        debug!("Using provided Steam path: {user_path}");
+        return Ok(user_path.to_string());
+    }
+    
+    Err(Error::new(ErrorKind::NotFound, format!(
+        "No valid Steam installation found in {user_path} or {debian_variant}"
+    )))
+}
+
 /// Try ManifestHub first (returns raw .lua). If not found, try LuaTools ZIP APIs.
 fn install(steam_path: &str, appid: i32) -> io::Result<()> {
-    let lua_dest = format!("{steam_path}{MAIN_SEPARATOR}config{MAIN_SEPARATOR}stplug-in{MAIN_SEPARATOR}{appid}.lua");
+    // Detect the real Steam path
+    let real_steam_path = detect_real_steam_path(steam_path)?;
+    
+    let lua_dest = format!("{real_steam_path}{MAIN_SEPARATOR}config{MAIN_SEPARATOR}stplug-in{MAIN_SEPARATOR}{appid}.lua");
     if Path::new(&lua_dest).exists() {
         return Err(Error::new(ErrorKind::AlreadyExists, "Game already exists!"));
     }
@@ -87,7 +114,7 @@ fn install(steam_path: &str, appid: i32) -> io::Result<()> {
             continue;
         }
 
-        match extract_zip_and_install(&bytes, appid, steam_path) {
+        match extract_zip_and_install(&bytes, appid, &real_steam_path) {
             Ok(_) => {
                 debug!("API '{api_name}' -> installed {lua_dest}");
                 return Ok(());
