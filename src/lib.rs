@@ -128,13 +128,44 @@ pub fn install_melonloader(_path: &str, _melon_loader: bool) -> Option<()> {
     None
 }
 
+/// Detects the real Steam path, handling both standard ~/.steam and Debian variant ~/.steam/debian-installation
+#[cfg(not(target_os = "windows"))]
+pub fn detect_real_steam_path(base_path: &str) -> String {
+    let base = Path::new(base_path);
+    
+    // Try debian-installation variant first (more specific path for Debian package installs)
+    let debian_variant = base.join("debian-installation");
+    if debian_variant.exists() && debian_variant.join("steamapps").exists() {
+        debug!("Detected Steam using debian-installation path");
+        return debian_variant.to_string_lossy().to_string();
+    }
+    
+    // Fallback to provided path
+    debug!("Using provided Steam path");
+    base_path.to_string()
+}
+
+/// On Windows, just return the path as-is
+#[cfg(target_os = "windows")]
+pub fn detect_real_steam_path(base_path: &str) -> String {
+    base_path.to_string()
+}
+
 #[must_use]
 pub fn get_games(path: impl Into<PathBuf> + Copy, current_games: HashMap<u32, Game>) -> HashMap<u32, Game> {
-    let mut p = path.into();
+    let base_path = path.into();
+    
+    // Detect real path (handles debian-installation variant on Linux)
+    #[cfg(not(target_os = "windows"))]
+    let real_path = detect_real_steam_path(&base_path.to_string_lossy());
+    #[cfg(target_os = "windows")]
+    let real_path = base_path.to_string_lossy().to_string();
+    
+    let mut p = PathBuf::from(&real_path);
     p.push("config");
     p.push("stplug-in");
 
-    let mut gp = path.into();
+    let mut gp = PathBuf::from(&real_path);
     gp.push("steamapps");
 
     let mut games: HashMap<u32, Game> = current_games;

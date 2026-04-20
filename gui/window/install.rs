@@ -252,7 +252,24 @@ impl WindowPopup for InstallPopup {
                         ui.spinner();
                         ui.label(format!("Trying: {api}..."));
                     }
-                    InstallStatus::Done => { ui.label("✅ Installed!"); }
+                    InstallStatus::Done => {
+                        ui.label("✅ Installed!");
+                        if ui.button("📂 Open in Steam").clicked() {
+                            let appid = &app.install.appid;
+                            #[cfg(target_os = "windows")]
+                            {
+                                let _ = std::process::Command::new("cmd")
+                                    .args(["/C", &format!("start steam://install/{appid}")])
+                                    .spawn();
+                            }
+                            #[cfg(not(target_os = "windows"))]
+                            {
+                                let _ = std::process::Command::new("steam")
+                                    .arg(format!("steam://install/{appid}"))
+                                    .spawn();
+                            }
+                        }
+                    }
                     InstallStatus::AlreadyExists => { ui.label("⚠ Already installed."); }
                     InstallStatus::NotFound => { ui.label("❌ Not found in any source."); }
                     InstallStatus::Error(e) => { ui.label(format!("❌ Error: {e}")); }

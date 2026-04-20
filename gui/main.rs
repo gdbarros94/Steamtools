@@ -10,7 +10,7 @@ use egui_extras::install_image_loaders;
 use log::{warn, info, debug, error, trace};
 use serde::{Serialize, Deserialize};
 use eframe::egui::{self, FontData, FontDefinitions, FontId, RichText, Sense, UiBuilder, vec2};
-use steamtools::{Game, Steam, get_games};
+use steamtools::{Game, Steam, get_games, detect_real_steam_path};
 
 mod window;
 use window::{ModsPopup, ViewPopup, InstallPopup, Settings, Plugins};
@@ -213,6 +213,12 @@ impl eframe::App for App {
                                     .set_description(format!("Steam is not installed in {}. Please choose a path where you installed Steam.", self.st.path))
                                     .show();
                             } else {
+                                // Detect real Steam path (handles debian-installation variant on Linux)
+                                #[cfg(not(target_os = "windows"))]
+                                {
+                                    self.st.path = detect_real_steam_path(&self.st.path);
+                                }
+                                
                                 rfd::MessageDialog::new()
                                     .set_level(rfd::MessageLevel::Info)
                                     .set_title("Info")
