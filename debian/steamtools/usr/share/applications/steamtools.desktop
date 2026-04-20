@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Steamtools
+Comment=Steam Games Manager
+Exec=/usr/bin/stcli
+Icon=steamtools
+Terminal=false
+Categories=Utility;Game;
+StartupNotify=true

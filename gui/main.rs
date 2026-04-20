@@ -29,6 +29,7 @@ enum State {
     Settings,
 }
 
+#[cfg(target_os = "windows")]
 const HOOK_DLL: &[u8] = include_bytes!("../deps/xinput1_4.dll");
 const STEAM_BINARY_PATH: &str = "steam.bin";
 
@@ -45,6 +46,7 @@ struct App {
     install: InstallPopup,
     mods: ModsPopup,
     plugins: Plugins,
+    #[cfg(target_os = "windows")]
     unlock: bool,
     version: String,
     buffer: String,
@@ -143,6 +145,7 @@ impl App {
                 app.settings = serde_json::from_str(&settings).unwrap();
             });
 
+            #[cfg(target_os = "windows")]
             storage_ref.get_string("unlock" ).map(|unlock| {
                 app.unlock = serde_json::from_str(&unlock).unwrap();
             });
@@ -169,6 +172,7 @@ impl eframe::App for App {
         }
         storage.set_string("games", serde_json::to_string(&self.games).unwrap());
         storage.set_string("settings", serde_json::to_string(&self.settings).unwrap());
+        #[cfg(target_os = "windows")]
         storage.set_string("unlock", serde_json::to_string(&self.unlock).unwrap());
     }
 
@@ -194,9 +198,10 @@ impl eframe::App for App {
 
                         if !self.st.path.is_empty() && ui.button(RichText::new("Validate").font(FontId::proportional(18.0))).clicked() {
                             let mut pt_bf = PathBuf::from(self.st.path.clone());
-                            // pt_bf.push("config");
-                            // pt_bf.push("stplug-in");
+                            #[cfg(target_os = "windows")]
                             pt_bf.push("steam.exe");
+                            #[cfg(not(target_os = "windows"))]
+                            pt_bf.push("steam.sh");
                             info!("Steam path set to {}", &pt_bf.display());
                             if !pt_bf.exists() {
                                 rfd::MessageDialog::new()
@@ -295,7 +300,8 @@ impl eframe::App for App {
 
                                     let mut path: PathBuf = PathBuf::new();
                                     path.push(&self.st.path);
-                                    path.push("config\\stplug-in");
+                                    path.push("config");
+                                    path.push("stplug-in");
                                     match files {
                                         Some(ref files) => {
                                             files.iter().for_each(|file| {
@@ -338,6 +344,7 @@ impl eframe::App for App {
                                     self.loaded = false;
                                 }
 
+                                #[cfg(target_os = "windows")]
                                 if ui.checkbox(&mut self.unlock, "Unlock").changed() {
                                     if self.unlock {
                                         fs::write(format!("{}\\xinput1_4.dll", self.st.path), HOOK_DLL).unwrap();
@@ -403,17 +410,21 @@ impl eframe::App for App {
                                 if game.installed {
                                     if ui.add_sized(vec2(50.0,25.0), egui::Button::new(RichText::new("\u{1F5D1} Uninstall").strong().raised())).on_hover_text("Prompts steam to uninstall the game").clicked() {
                                         self.buffer.clear();
-                                        write!(&mut self.buffer, "start steam://uninstall/{}", game.appid).unwrap();
+                                        write!(&mut self.buffer, "steam://uninstall/{}", game.appid).unwrap();
                                         #[cfg(target_os="windows")]
-                                        process::Command::new("cmd").args(["/C", &self.buffer]).spawn().expect("Failed to uninstall");
+                                        process::Command::new("cmd").args(["/C", &format!("start {}", &self.buffer)]).spawn().expect("Failed to uninstall");
+                                        #[cfg(not(target_os="windows"))]
+                                        process::Command::new("xdg-open").arg(&self.buffer).spawn().expect("Failed to uninstall");
                                         self.buffer.clear();
                                     }
                                 } else {
                                     if ui.add_sized(vec2(50.0, 25.0), egui::Button::new(RichText::new("\u{2795} Install").strong().raised())).on_hover_text("Prompts steam to install the game").clicked() {
                                         self.buffer.clear();
-                                        write!(&mut self.buffer, "start steam://install/{}", game.appid).unwrap();
+                                        write!(&mut self.buffer, "steam://install/{}", game.appid).unwrap();
                                         #[cfg(target_os="windows")]
-                                        process::Command::new("cmd").args(["/C", &self.buffer]).spawn().expect("Failed to install");
+                                        process::Command::new("cmd").args(["/C", &format!("start {}", &self.buffer)]).spawn().expect("Failed to install");
+                                        #[cfg(not(target_os="windows"))]
+                                        process::Command::new("xdg-open").arg(&self.buffer).spawn().expect("Failed to install");
                                         self.buffer.clear();
                                     }
                                 }

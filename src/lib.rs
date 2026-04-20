@@ -51,6 +51,7 @@ pub struct Steam {
     pub melon_loader: bool,
 }
 
+#[cfg(target_os = "windows")]
 pub fn install_melonloader(path: &str, melon_loader: bool) -> Option<()> {
     if melon_loader {
         if !Path::new("MelonLoader").exists() {
@@ -63,16 +64,13 @@ pub fn install_melonloader(path: &str, melon_loader: bool) -> Option<()> {
                     .show();
                 return None;
             }
-            #[cfg(target_os="windows")]
-            {
-                std::thread::spawn(|| {
-                    let bytes = blocking::get(format!("{}MelonLoader.Installer.exe", MELONLOADER_URL)).ok().unwrap().bytes().unwrap_or_default();
-                    let mut file = File::create("MelonLoader/Loader.exe").unwrap();
-                    file.write_all(&bytes).unwrap();
-                    file.flush().unwrap();
-                    Command::new("cmd").args(["/C", ".\\MelonLoader\\Loader.exe"]).spawn().expect("Failed to open MelonLoader.");
-                });
-            };
+            std::thread::spawn(|| {
+                let bytes = blocking::get(format!("{}MelonLoader.Installer.exe", MELONLOADER_URL)).ok().unwrap().bytes().unwrap_or_default();
+                let mut file = File::create("MelonLoader/Loader.exe").unwrap();
+                file.write_all(&bytes).unwrap();
+                file.flush().unwrap();
+                Command::new("cmd").args(["/C", ".\\MelonLoader\\Loader.exe"]).spawn().expect("Failed to open MelonLoader.");
+            });
         } else {
             Command::new("cmd").args(["/C", ".\\MelonLoader\\Loader.exe"]).spawn().expect("Failed to open MelonLoader.");
         }
@@ -117,6 +115,17 @@ pub fn install_melonloader(path: &str, melon_loader: bool) -> Option<()> {
     }
 
     Some(())
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn install_melonloader(_path: &str, _melon_loader: bool) -> Option<()> {
+    rfd::MessageDialog::new()
+        .set_level(rfd::MessageLevel::Info)
+        .set_buttons(rfd::MessageButtons::Ok)
+        .set_title("Info")
+        .set_description("MelonLoader is only supported on Windows.")
+        .show();
+    None
 }
 
 #[must_use]
@@ -164,7 +173,11 @@ pub fn get_games(path: impl Into<PathBuf> + Copy, current_games: HashMap<u32, Ga
                 if line.starts_with("\"name\"") {
                     if let Some((_, value)) = line.split_once('"') {
                         if let Some((_, value)) = value.split_once('"') {
-                            name.insert(id, format!("{}\\steamapps\\common\\{}", Into::<PathBuf>::into(path).display(), value.trim()[1..value.len() - 3].to_string()));
+                            let mut game_path = Into::<PathBuf>::into(path);
+                            game_path.push("steamapps");
+                            game_path.push("common");
+                            game_path.push(value.trim()[1..value.len() - 3].to_string());
+                            name.insert(id, game_path.to_string_lossy().to_string());
                         }
                     }
                 }

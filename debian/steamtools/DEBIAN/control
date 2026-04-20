@@ -1,0 +1,11 @@
+Package: steamtools
+Version: 0.6.3-linux1
+Architecture: amd64
+Maintainer: RealViper <realviper@example.com>
+Depends: libvulkan1, libssl3, libgtk-3-0, libwayland-client0, libx11-6, libxkbcommon0
+Homepage: https://github.com/RealViper8/Steamtools
+Description: Steam Tools - Gerenciador de Jogos Steam
+ Steamtools é uma ferramenta desktop para gerenciar jogos Steam,
+ baixar manifests para desbloqueios, executar plugins Lua e gerenciar mods
+ via integração com MelonLoader.
+ Esta é a versão nativa para Linux.
