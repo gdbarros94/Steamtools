@@ -251,7 +251,9 @@ impl eframe::App for App {
                         ui.horizontal(|ui| {
                             ui.label("Made by");
                             ui.hyperlink_to("RealViper", "https://github.com/RealViper8/Steamtools");
-                            ui.add_space((ui.available_width()/2.0)+85.0);
+                            ui.label("& Linux port by");
+                            ui.hyperlink_to("gdbarros94", "https://github.com/gdbarros94");
+                            ui.add_space((ui.available_width()/2.0)+25.0);
                             ui.label(format!("Version: {}", VERSION));
                         });
 
