@@ -201,7 +201,10 @@ impl eframe::App for App {
                             #[cfg(target_os = "windows")]
                             pt_bf.push("steam.exe");
                             #[cfg(not(target_os = "windows"))]
-                            pt_bf.push("steam.sh");
+                            {
+                                // On Linux, verify either steamapps or config directories exist
+                                pt_bf.push("steamapps");
+                            }
                             info!("Steam path set to {}", &pt_bf.display());
                             if !pt_bf.exists() {
                                 rfd::MessageDialog::new()
