@@ -17,6 +17,8 @@
 
 **Steamtools** is a lightweight tool written in **Rust** that allows you to easily **view, install, and remove Lua Manifests**. The source code of the proxy dll: xinput1_4.dll is currently not available since I only ship the binary for it. May **change** in  the **future** !
 
+> ⚠️ **Linux Support (WORK IN PROGRESS)**: Linux version (`.deb` package) is now available but still under development. Contributions welcome! See [Linux Support](#-linux-support-work-in-progress) section below.
+
 ---
 
 ## 🗓️ TODO
@@ -50,6 +52,37 @@ Since this is a personal project and I invest my free time in making this you co
 SOL: GYepZXvMAyQ8y54HuWx8QR3yBBg9EFEqn7dDJo93GbTM (SOL Network)
 
 [![Donate](https://img.shields.io/badge/Donate-Ko--fi-orange)](https://ko-fi.com/realviper)
+
+---
+
+## 🐧 Linux Support (WORK IN PROGRESS)
+
+⚠️ **Status**: Beta - Core functionality working, but still under active development
+
+### What works:
+- ✅ View installed Lua manifests
+- ✅ Download manifests from multiple sources (ManifestHub, Ryuu, TwentyTwo, Sushi)
+- ✅ Install manifests (.lua files)
+- ✅ Automatic Steam path detection (including Debian package installations)
+- ✅ Open in Steam button to launch installation directly
+- ✅ Support for Debian package installations (`.steam/debian-installation/`)
+
+### Installation (Linux):
+```bash
+wget https://github.com/RealViper8/steamtools/releases/download/vX.X.X/steamtools-0.6.3-linux.deb
+sudo dpkg -i steamtools-0.6.3-linux.deb
+steamtools
+```
+
+### Known Limitations:
+- ⚠️ MelonLoader support not yet implemented for Linux
+- ⚠️ Plugins feature is experimental
+- ⚠️ Some UI elements may not render perfectly on all desktop environments
+
+### Contributions:
+Linux support is community-driven! Contributions welcome at [feat/linux-support](https://github.com/RealViper8/steamtools/tree/feat/linux-support) branch.
+
+---
 
 ## Prerequisites
 
